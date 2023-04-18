@@ -26,4 +26,4 @@ The most basic boilerplate using Node.js, Express and Docker.
 
 - [Davide Violante](https://github.com/DavideViolante)
 
-Hellooo o
+Helloooo
