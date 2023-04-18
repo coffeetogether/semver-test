@@ -64,3 +64,10 @@ jobs:
         with:
           push: true
           tags: me0dira/${{ github.event.repository.name }}:${{steps.release.outputs.releaseVersion}}
+
+      - name: Build and publish pre release
+        uses: docker/build-push-action@v4
+        if: steps.steps.release.outputs.releaseVersion == ''
+        with:
+          push: true
+          tags: me0dira/${{ github.event.repository.name }}:latest
