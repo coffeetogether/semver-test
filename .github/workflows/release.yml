@@ -53,14 +53,14 @@ jobs:
 
       - name: Build and publish latest
         uses: docker/build-push-action@v4
-        if: steps.extract_branch.outputs.branch == 'main'
+        if: steps.extract_branch.outputs.branch == 'main' && steps.steps.release.outputs.releaseVersion != ''
         with:
           push: true
           tags: me0dira/${{ github.event.repository.name }}:latest
 
       - name: Build and publish pre release
         uses: docker/build-push-action@v4
-        if: steps.extract_branch.outputs.branch == 'develop'
+        if: steps.extract_branch.outputs.branch == 'develop' && steps.steps.release.outputs.releaseVersion != ''
         with:
           push: true
           tags: me0dira/${{ github.event.repository.name }}:${{steps.release.outputs.releaseVersion}}
