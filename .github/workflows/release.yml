@@ -51,16 +51,16 @@ jobs:
           username: ${{ secrets.KAISER_DOCKERHUB_USERNAME }}
           password: ${{ secrets.KAISER_DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Docker Image LATEST tag
+      - name: Build and publish latest
         uses: docker/build-push-action@v4
         if: steps.extract_branch.outputs.branch == 'main'
         with:
           push: true
-          tags: devopshobbies/${{steps.extract_branch.outputs.branch}}:latest
+          tags: me0dira/${{ github.event.repository.name }}:latest
 
-      - name: Build and Push Docker Image LATEST tag
+      - name: Build and publish pre release
         uses: docker/build-push-action@v4
         if: steps.extract_branch.outputs.branch == 'develop'
         with:
           push: true
-          tags: devopshobbies/${{steps.extract_branch.outputs.branch}}:${{steps.release.outputs.releaseVersion}}
+          tags: me0dira/${{ github.event.repository.name }}:${{steps.release.outputs.releaseVersion}}
