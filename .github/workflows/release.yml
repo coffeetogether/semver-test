@@ -28,10 +28,6 @@ jobs:
         run: echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >>$GITHUB_OUTPUT
         id: extract_branch
 
-      # Docker release
-      # If development release latest tag
-      # If branch name release version
-
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
@@ -53,21 +49,21 @@ jobs:
 
       - name: Build and publish latest
         uses: docker/build-push-action@v4
-        if: steps.extract_branch.outputs.branch == 'main' && steps.steps.release.outputs.releaseVersion != ''
+        if: steps.extract_branch.outputs.branch == 'main' && steps.release.outputs.releaseVersion != ''
         with:
           push: true
           tags: me0dira/${{ github.event.repository.name }}:latest
 
       - name: Build and publish pre release
         uses: docker/build-push-action@v4
-        if: steps.extract_branch.outputs.branch == 'develop' && steps.steps.release.outputs.releaseVersion != ''
+        if: steps.extract_branch.outputs.branch == 'develop' && steps.release.outputs.releaseVersion != ''
         with:
           push: true
           tags: me0dira/${{ github.event.repository.name }}:${{steps.release.outputs.releaseVersion}}
 
       - name: Build and publish pre release
         uses: docker/build-push-action@v4
-        if: steps.steps.release.outputs.releaseVersion == ''
+        if: steps.release.outputs.releaseVersion == ''
         with:
           push: true
           tags: me0dira/${{ github.event.repository.name }}:latest
