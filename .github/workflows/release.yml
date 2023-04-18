@@ -1,0 +1,71 @@
+name: Release and get the version
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+        with:
+          fetch-depth: 0
+
+      - name: Release based on branch
+        uses: mehdi-ra/main-develop-semver@v1.4.0
+        id: release
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          releaseTitle: Auto release
+
+      - name: Extract branch name
+        run: echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >>$GITHUB_OUTPUT
+        id: extract_branch
+
+      # Docker release
+      # If development release latest tag
+      # If branch name release version
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: devopshobbies/kaiser-biolerplate
+          tags: type=raw,value=${{ steps.release.outputs.releaseVersion }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.KAISER_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.KAISER_DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+
+      - name: Build and Push Docker Image LATEST tag
+        uses: docker/build-push-action@v4
+        if: steps.extract_branch.outputs.branch == 'main'
+        with:
+          push: true
+          tags: devopshobbies/kaiser-biolerplate:latest
+
+      - name: Build and Push Docker Image LATEST tag
+        uses: docker/build-push-action@v4
+        if: steps.extract_branch.outputs.branch == 'develop'
+        with:
+          push: true
+          tags: devopshobbies/kaiser-biolerplate:${{steps.release.outputs.releaseVersion}}
