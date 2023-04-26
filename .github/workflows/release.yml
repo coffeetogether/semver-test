@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Release based on branch
-        uses: mehdi-ra/main-develop-semver@3c94d52eee42113338de4dfe3904573475ce1911
+        uses: mehdi-ra/main-develop-semver@v1.7.1-stage
         id: release
         with:
           token: ${{secrets.GITHUB_TOKEN}}
