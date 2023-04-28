@@ -87,9 +87,13 @@ jobs:
         with:
           registry-url: registry-url-here
 
+      - name: Get latest version
+        id: validVersion
+        run: echo tag=${"${{steps.latestTag.outputs.tag}}"#v} >> $GITHUB_OUTPUT
+
       - uses: matt-usurp/npm-publish@v2
         with:
-          version: ${"${{steps.latestTag.outputs.tag}}"#v}
+          version: ${"${{steps.validVersion.outputs.tag}}"#v}
           tag: "next"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
