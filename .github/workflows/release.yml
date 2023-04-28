@@ -89,11 +89,9 @@ jobs:
 
       - name: Get latest version
         id: validVersion
-        run: echo "version=$(echo ${{ steps.latestTag.outputs.tag }} | sed 's/^v//')" >> $GITHUB_OUTPUT
+        run: |
+          npm version $(echo ${{ steps.latestTag.outputs.tag }} | sed 's/^v//') --force --allow-same-version --no-git-tag-version
 
-      - uses: matt-usurp/npm-publish@v2
+      - uses: JS-DevTools/npm-publish@v2
         with:
-          version: ${{steps.validVersion.outputs.version}}
-          tag: "next"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          token: ${{ secrets.NPM_TOKEN }}
