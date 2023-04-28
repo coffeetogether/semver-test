@@ -80,19 +80,16 @@ jobs:
         uses: oprypin/find-latest-tag@e1e0e606cc7e9ede25140a5a139b3a5a1b717ece
         with:
           releases-only: true
+          repository: ${{ github.repository }}
           token: ${{secrets.GITHUB_TOKEN}}
 
       - uses: actions/setup-node@v3
         with:
           registry-url: registry-url-here
 
-      - name: Get version for publishing
-        id: publishVersion
-        run: echo "tag=${{steps.latestTag.outputs.tag}}" >> $GITHUB_OUTPUT
-
       - uses: matt-usurp/npm-publish@v2
         with:
-          version: ${${{steps.publishVersion.outputs.tag}}#v}
+          version: ${"${{steps.latestTag.outputs.tag}}"#v}
           tag: "next"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
