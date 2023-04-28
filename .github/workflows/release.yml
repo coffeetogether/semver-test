@@ -85,15 +85,12 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          registry-url: registry-url-here
+          node-version: 18
 
       - name: Get latest version
         id: validVersion
         run: echo "version=$(echo ${{ steps.latestTag.outputs.tag }} | sed 's/^v//')" >> $GITHUB_OUTPUT
 
-      - uses: matt-usurp/npm-publish@v2
-        with:
-          version: ${{steps.validVersion.outputs.version}}
-          tag: "next"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Update version on package.json
+        id: updateVersion
+        run: npm version ${{steps.validVersion.outputs.version}} --force --no-git-tag-version
