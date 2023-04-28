@@ -1,6 +1,6 @@
 {
-  "name": "nodejs-docker-starter",
-  "version": "1.0.0",
+  "name": "jsd-xas11",
+  "version": "1.0.1",
   "description": "Node.js boilerplate using Express and Docker.",
   "main": "server.js",
   "scripts": {
