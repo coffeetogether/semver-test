@@ -89,11 +89,11 @@ jobs:
 
       - name: Get latest version
         id: validVersion
-        run: echo "publishVersion=$(echo ${{ steps.latestTag.outputs.tag }} | sed 's/^v//')" >> $GITHUB_OUTPUT
+        run: echo "version=$(echo ${{ steps.latestTag.outputs.tag }} | sed 's/^v//')" >> $GITHUB_OUTPUT
 
       - uses: matt-usurp/npm-publish@v2
         with:
-          version: ${"${{steps.validVersion.outputs.tag}}"#v}
+          version: ${{steps.validVersion.outputs.version}}
           tag: "next"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
