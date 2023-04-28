@@ -82,4 +82,4 @@ jobs:
       - uses: JS-DevTools/npm-publish@v2
         with:
           token: ${{secrets.NPM_TOKEN}}
-          tag: $"{GITHUB_REF##*/}"
+          tag: "${GITHUB_REF##*/}"
