@@ -10,12 +10,21 @@ jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    permissions: write-all
+
+    outputs:
+      latestTag: ${{steps.latestTag.outputs.tag}}
+      latestNpmVersion: ${{steps.validVersion.outputs.version}}
+      branchName: ${{steps.extract_branch.outputs.branch}}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
         with:
           fetch-depth: 0
+
+      - name: Extract branch name
+        run: echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >>$GITHUB_OUTPUT
+        id: extract_branch
 
       - name: Release based on branch
         uses: mehdi-ra/main-develop-semver@v1.6.0
@@ -24,16 +33,30 @@ jobs:
           token: ${{secrets.GITHUB_TOKEN}}
           releaseTitle: Auto release
 
-      - name: Extract branch name
-        run: echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >>$GITHUB_OUTPUT
-        id: extract_branch
+      - name: Get latest tag
+        id: latestTag
+        continue-on-error: true
+        uses: oprypin/find-latest-tag@e1e0e606cc7e9ede25140a5a139b3a5a1b717ece
+        with:
+          releases-only: true
+          repository: ${{ github.repository }}
+          token: ${{secrets.GITHUB_TOKEN}}
 
+      - name: Remove v before tag and output
+        id: validVersion
+        run: echo "version=$(echo ${{ steps.latestTag.outputs.tag }} | sed 's/^v//')" >> $GITHUB_OUTPUT
+
+  docker-publish:
+    runs-on: ubuntu-latest
+    needs: release
+
+    steps:
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: devopshobbies/kaiser-biolerplate
-          tags: type=raw,value=${{ steps.release.outputs.releaseVersion }}
+          tags: type=raw,value=${{ needs.release.outputs.latestTag }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -47,34 +70,6 @@ jobs:
           username: ${{ secrets.KAISER_DOCKERHUB_USERNAME }}
           password: ${{ secrets.KAISER_DOCKERHUB_TOKEN }}
 
-      - name: Build and publish latest
-        uses: docker/build-push-action@v4
-        if: steps.extract_branch.outputs.branch == 'main' && steps.release.outputs.releaseVersion != ''
-        with:
-          push: true
-          tags: me0dira/${{ github.event.repository.name }}:latest
-
-      - name: Build and publish pre release
-        uses: docker/build-push-action@v4
-        if: steps.extract_branch.outputs.branch == 'develop' && steps.release.outputs.releaseVersion != ''
-        with:
-          push: true
-          tags: me0dira/${{ github.event.repository.name }}:${{steps.release.outputs.releaseVersion}}
-
-      - name: Build and publish pre release
-        uses: docker/build-push-action@v4
-        if: steps.release.outputs.releaseVersion == ''
-        with:
-          push: true
-          tags: me0dira/${{ github.event.repository.name }}:latest
-
-  npm-publish:
-    runs-on: ubuntu-latest
-    needs: release
-    permissions: write-all
-
-    steps:
-      - uses: actions/checkout@v3
       - name: Get latest tag
         id: latestTag
         continue-on-error: true
@@ -84,13 +79,39 @@ jobs:
           repository: ${{ github.repository }}
           token: ${{secrets.GITHUB_TOKEN}}
 
+      - name: Build and publish latest
+        uses: docker/build-push-action@v4
+        if: needs.release.outputs.branchName == 'main'
+        with:
+          push: true
+          tags: me0dira/${{ github.event.repository.name }}:latest
+
+      - name: Build and publish prerelease
+        uses: docker/build-push-action@v4
+        if: needs.release.outputs.branchName == 'develop'
+        with:
+          push: true
+          tags: me0dira/${{ github.event.repository.name }}:${{ needs.release.outputs.latestTag }}
+
+      - name: Rollback Release
+        if: failure()
+        uses: author/action-rollback@stable
+        with:
+          tag: ${{ needs.release.outputs.latestTag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  npm-publish:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    timeout-minutes: 5
+    needs: [release, docker-publish]
+
+    steps:
+      - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-
-      - name: Get latest version
-        id: validVersion
-        run: echo "version=$(echo ${{ steps.latestTag.outputs.tag }} | sed 's/^v//')" >> $GITHUB_OUTPUT
 
       - name: Update version on package.json
         id: updateVersion
