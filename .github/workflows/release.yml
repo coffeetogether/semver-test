@@ -88,11 +88,11 @@ jobs:
 
       - name: Get version for publishing
         id: publishVersion
-        run: echo "tag=${{steps.latestTag.outputs.tag#v}}" >> $GITHUB_OUTPUT
+        run: echo "tag=${{steps.latestTag.outputs.tag}}" >> $GITHUB_OUTPUT
 
       - uses: matt-usurp/npm-publish@v2
         with:
-          version: ${{steps.publishVersion.outputs.tag}}
+          version: ${${{steps.publishVersion.outputs.tag}}#v}
           tag: "next"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
