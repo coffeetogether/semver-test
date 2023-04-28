@@ -67,3 +67,19 @@ jobs:
         with:
           push: true
           tags: me0dira/${{ github.event.repository.name }}:latest
+
+  npm-publish:
+    runs-on: ubuntu-latest
+    needs: release
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npm test
+      - uses: JS-DevTools/npm-publish@v2
+        with:
+          token: ${{secrets.NPM_TOKEN}}
+          tag: ${GITHUB_REF##*/}
